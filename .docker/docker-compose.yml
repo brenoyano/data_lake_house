@@ -1,0 +1,8 @@
+services:
+  jupyter:
+    build: .
+    command: /bin/bash -c "cd ../../datalake && start.sh jupyter lab --ip=* --LabApp.token='' --browser=False --allow_remote_access=true --port=8888 --allow-root --ServerApp.disable_check_xsrf=True"
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../datalake/:/datalake

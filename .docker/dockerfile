@@ -1,0 +1,5 @@
+FROM jupyter/all-spark-notebook:latest
+COPY dependencies/requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+RUN ipython profile create
+COPY dependencies/jupyter_magic.py  /home/jovyan/.ipython/profile_default/startup
