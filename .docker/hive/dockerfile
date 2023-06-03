@@ -1,0 +1,2 @@
+FROM apachehive/hive:4.0.0-SNAPSHOT
+USER root

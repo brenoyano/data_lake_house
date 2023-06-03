@@ -1,0 +1,5 @@
+FROM gethue/hue:latest
+USER root
+COPY dependencies/requirements.txt requirements.txt
+COPY dependencies/hue.ini ./desktop/conf/z-hue-overrides.ini
+RUN pip install --no-cache-dir -r requirements.txt
