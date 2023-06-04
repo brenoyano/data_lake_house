@@ -1,0 +1,4 @@
+FROM postgres:9.6
+ENV IS_RESUME="true"
+COPY dependencies/psql_dump.sql ./docker-entrypoint-initdb.d/dbinit.sql
+#COPY dependencies/hive-schema-4.0.0-alpha-2.derby.sql ./docker-entrypoint-initdb.d/hive-schema-4.0.0-alpha-2.derby.sql

@@ -1,8 +1,73 @@
 services:
+  postgres:
+    build: postgres/.
+    environment:
+      POSTGRES_DB: metastore_db
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./postgres/volume/pgdata/:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+  hiveserver2-standalone:
+    build: hive/.
+    command: /bin/bash -c "./startup.sh"
+    platform: "linux/arm64/v8"
+    environment:
+      - SERVICE_NAME=hiveserver2
+    ports:
+      - "9083:9083"
+      - "10000:10000"
+      - "10002:10002"
+    networks:
+      - backend
+    volumes:
+      - ./hive/volume/warehouse/:/opt/hive/data/warehouse
+    depends_on:
+      postgres:
+       condition: service_healthy
+    links:
+      - postgres
   jupyter:
     build: .
     command: /bin/bash -c "cd ../../datalake && start.sh jupyter lab --ip=* --LabApp.token='' --browser=False --allow_remote_access=true --port=8888 --allow-root --ServerApp.disable_check_xsrf=True"
     ports:
       - "8888:8888"
+    networks:
+      - backend
     volumes:
       - ../datalake/:/datalake
+    depends_on:
+      - hiveserver2-standalone
+    links:
+      - hiveserver2-standalone
+      - postgres
+  hue:
+    build: hue/.
+    command: /bin/bash -c "./startup.sh"
+    ports:
+      - "9999:8000"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+       condition: service_healthy
+      jupyter:
+       condition: service_started
+      hiveserver2-standalone:
+       condition: service_started
+    links:
+      - hiveserver2-standalone
+      - postgres
+    
+networks:
+  backend:
+    driver: "bridge"
