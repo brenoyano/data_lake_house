@@ -3,6 +3,10 @@ from delta import *
 from IPython.core.magic import (register_line_magic, register_cell_magic,
 register_line_cell_magic)
 import ipywidgets as w
+from itables import init_notebook_mode
+import itables.options as opt
+init_notebook_mode(all_interactive=True)
+opt.style = "table-layout:auto;width:auto;float:left"
 
 
 #Magics
