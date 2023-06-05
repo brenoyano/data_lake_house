@@ -5,9 +5,10 @@ services:
       POSTGRES_DB: metastore_db
       POSTGRES_USER: hive
       POSTGRES_PASSWORD: postgres
-      PGDATA: /var/lib/postgresql/data
+      PGDATA: /data/postgres
     volumes:
-      - ./postgres/volume/pgdata/:/var/lib/postgresql/data
+      - ./postgres/volume/pgdata/:/data/postgres
+      - postgres-volume:/data/postgres
     ports:
       - "5432:5432"
     healthcheck:
@@ -17,25 +18,23 @@ services:
       retries: 5
     networks:
       - backend
-  hiveserver2-standalone:
-    build: hive/.
-    command: /bin/bash -c "./startup.sh"
-    platform: "linux/arm64/v8"
-    environment:
-      - SERVICE_NAME=hiveserver2
-    ports:
-      - "9083:9083"
-      - "10000:10000"
-      - "10002:10002"
-    networks:
-      - backend
-    volumes:
-      - ./hive/volume/warehouse/:/opt/hive/data/warehouse
-    depends_on:
-      postgres:
-       condition: service_healthy
-    links:
-      - postgres
+  # hiveserver2:
+  #   platform: "linux/amd64"
+  #   tty: true
+  #   stdin_open: true
+  #   user: root
+  #   build: hive/.
+  #   env_file:
+  #     - ./hive/dependencies/hadoop-hive.env
+  #   ports:
+  #     - "10000:10000"
+  #     - "10002:10002"
+  #   volumes:
+  #     - ./hive/volume/warehouse/:/opt/hive/data/warehouse
+  #     - warehouse-volume:/opt/hive/data/warehouse
+  #     - postgres-volume:/data/postgres
+  #   networks:
+  #     - backend
   jupyter:
     build: .
     command: /bin/bash -c "cd ../../datalake && start.sh jupyter lab --ip=* --LabApp.token='' --browser=False --allow_remote_access=true --port=8888 --allow-root --ServerApp.disable_check_xsrf=True"
@@ -45,10 +44,10 @@ services:
       - backend
     volumes:
       - ../datalake/:/datalake
-    depends_on:
-      - hiveserver2-standalone
+      - warehouse-volume:/opt/hive/data/warehouse
+      - postgres-volume:/data/postgres
     links:
-      - hiveserver2-standalone
+      # - hiveserver2
       - postgres
   hue:
     build: hue/.
@@ -62,12 +61,13 @@ services:
        condition: service_healthy
       jupyter:
        condition: service_started
-      hiveserver2-standalone:
-       condition: service_started
     links:
-      - hiveserver2-standalone
       - postgres
-    
+
+volumes:
+     warehouse-volume:
+     postgres-volume:
+
 networks:
   backend:
     driver: "bridge"

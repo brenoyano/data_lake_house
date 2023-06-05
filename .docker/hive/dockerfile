@@ -1,7 +1,6 @@
 FROM apache/hive:4.0.0-alpha-2
 USER root
-COPY dependencies/hive-site.xml /opt/hive/conf/hive-site.xml
-ENV HIVE_CUSTOM_CONF_DIR="/opt/hive/conf"
-ENV IS_RESUME="true"
-ENV DB_DRIVER=postgres
-ENV SERVICE_OPTS="-Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore_db -Djavax.jdo.option.ConnectionUserName=hive -Djavax.jdo.option.ConnectionPassword=postgres"
+COPY dependencies/startup.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/startup.sh
+
+CMD startup.sh

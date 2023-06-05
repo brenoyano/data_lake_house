@@ -1,0 +1,24 @@
+  metastore:
+    user: root
+    build: hive/.
+    tty: true
+    stdin_open: true
+    environment:
+      DB_DRIVER: postgres
+      SERVICE_OPTS: "-Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore_db -Djavax.jdo.option.ConnectionUserName=hive -Djavax.jdo.option.ConnectionPassword=postgres"
+    env_file:
+      - ./hive/dependencies/hadoop-hive.env
+    command: /opt/hive/bin/hive --service metastore
+    ports:
+      - "9083:9083"
+    volumes:
+      - ./hive/volume/warehouse/:/opt/hive/data/warehouse
+      - warehouse-volume:/opt/hive/data/warehouse
+      - postgres-volume:/data/postgres
+    depends_on:
+      postgres:
+       condition: service_healthy
+    networks:
+      - backend
+    links:
+      - postgres
